@@ -1,0 +1,270 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var app = require('../app');
+var debug = require('debug')('youtube-sync:server');
+var http = require('http');
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+ */
+
+var server = http.createServer(app);
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+server.listen(3000);
+server.on('error', onError);
+server.on('listening', onListening);
+
+
+/**
+ * Socket.IO stuff
+ */
+var io = require('socket.io')(server);
+var uuid = require('uuid');
+var Room = require('../room.js');
+var getJSON = require('../getJSON');
+var rooms = []; // Array of Room objects
+
+io.on("connection", function (socket) {
+    socket.on("join", function (username, room_name) {
+
+        // if Room is new/empty
+        if (rooms[room_name] === undefined) {
+            rooms[room_name] = new Room(socket.id);
+            console.log("Created a new room: " + room_name);
+        }
+
+        // Set some socket properties the desired username
+        socket.username = username; //Todo: Check if valid username
+        socket.room = room_name; //Todo check if valid room name
+        socket.join(room_name);
+
+        rooms[room_name].addPerson(socket.id, username);
+
+        //Send playlist, and other info. Doesn't matter if the playlist is empty or not.
+        io.sockets.connected[socket.id].emit("ackJoin", {
+            username: username, //todo: avoid sending username
+            pos: rooms[room_name].playlist.pos,
+            playlist: rooms[room_name].playlist.videos,
+            secondsIn: (new Date().getTime() - rooms[room_name].playlist.timestamp) / 1000 + rooms[room_name].playlist.seekTime
+        });
+
+        //Send
+        socket.broadcast.to(socket.room).emit("userJoined", socket.username);
+
+        io.sockets.in(socket.room).emit("updateUsers", {
+            users: rooms[socket.room].people,
+            owner: rooms[socket.room].owner,
+            mods: rooms[socket.room].mods
+        });
+        console.log(socket.username + " joined " + socket.room + ". Socket ID: " + socket.id);
+    });
+
+    socket.on("videoStarted", function () {
+        if (rooms[socket.room].owner === socket.id) {
+            rooms[socket.room].playlist.timestamp = new Date().getTime();
+        }
+    });
+
+    socket.on("next", function () {
+        if (rooms[socket.room] !== undefined) { //Only owner can go next (For now)
+            if (rooms[socket.room].owner === socket.id) {
+                rooms[socket.room].playlist.next();
+                rooms[socket.room].playlist.timestamp = new Date().getTime();
+                io.sockets.in(socket.room).emit("next", rooms[socket.room].playlist.pos);
+            }
+        }
+    });
+
+    socket.on("setName", function (name) {
+        if (name === undefined || name == "" || name.length > 20) { // in case client side javascript was tampered
+            io.sockets.connected[socket.id].emit("update", "Invalid name");
+        } else {
+            io.sockets.in(socket.room).emit("update", "<em>" + socket.username + " set name to " + name + "</em>");
+            socket.username = name;
+            rooms[socket.room].people[socket.id].name = name;
+            //todo:change user list client side
+            // For now, broadcast to all
+            io.sockets.in(socket.room).emit("updateUsers", {  //  socket.broadcast.to
+                users: rooms[socket.room].people,
+                owner: rooms[socket.room].owner,
+                mods: rooms[socket.room].mods
+            });
+        }
+    });
+
+    socket.on("addVideo", function (data) {
+        //todo: check if video already exists in playlist
+        //TODO check if user can add videos to this room
+        //TODO check if video is valid input
+        var api = "AIzaSyBacpszKfy_j9IqiAvhhqtkhvQDTdVTx48";
+        var options = {
+            host: 'www.googleapis.com',
+            path: '/youtube/v3/videos?id=' + data.url + '&key=' + api + '&part=snippet,contentDetails',
+            method: 'GET',
+            port: 443
+        };
+        getJSON.getJSON(options, function (statusCode, arr) {
+            //200
+            if (statusCode == 200) {
+                for (var key in arr.items) {
+                    data.name = arr.items[key].snippet.title;
+                    break;
+                }
+                data.username = socket.username;
+                rooms[socket.room].addVideo(data);
+                var videos = rooms[socket.room].playlist.videos;
+                //todo: emit from username
+                io.sockets.in(socket.room).emit("videoAdded", videos[videos.length - 1]);
+            } else {
+                console.log("Error with getting json data from YT API - " + statusCode);
+            }
+        });
+    });
+
+    socket.on("chat", function (msg) {
+        console.log(socket.username + " from " + socket.room + " sent " + msg);
+        io.sockets.in(socket.room).emit("chat", socket.username, msg);
+    });
+
+    socket.on("disconnect", function () {
+        if (rooms[socket.room] === undefined) return; //in case the user is no longer in a room (server restart)
+        //delete room if last person leaves
+        if (rooms[socket.room].size === 1) {
+            delete rooms[socket.room];
+            console.log("Room " + socket.room + " deleted");
+        } else {
+            rooms[socket.room].size--;
+            // If the owner leaves
+            if (rooms[socket.room].owner === socket.id) {
+                try {
+                    // Assign someone else the leader
+                    for (var id in rooms[socket.room].people) {
+                        if (socket.id !== id) break;
+                    }
+                    socket.broadcast.to(socket.room).emit("newLeader", io.sockets.connected[id].username);
+                    rooms[socket.room].owner = id;
+                } catch (err) {
+                    console.log(err);
+                }
+            }
+            // If the person that's disconnecting exists in this room
+            if (rooms[socket.room].people[socket.id]) {
+                console.log("Removed person from " + socket.room + " - " + socket.username);
+                delete rooms[socket.room].people[socket.id];
+                // Broadcast to the room that the person disconnected
+                socket.broadcast.to(socket.room).emit("userLeft", socket.username);
+            }
+        }
+
+        var roomName = socket.room;
+        socket.leave(socket.room);
+        if (rooms[roomName] !== undefined) {
+            io.sockets.in(socket.room).emit("updateUsers", {
+                users: rooms[roomName].people,
+                owner: rooms[roomName].owner,
+                mods: rooms[roomName].mods
+            });
+        }
+    });
+
+    socket.on("seek", function (time) {
+        if (rooms[socket.room] === undefined) {
+            socket.disconnect(); // In case someone emits a seek without joining a room
+            return;
+        }
+        //only allow owner to seek
+        if (rooms[socket.room].owner === socket.id) {
+            //todo: verify time and url
+            console.log("Owner [" + socket.room + "] seeked to [" + time + "]");
+            if (rooms[socket.room].playlist.videos[rooms[socket.room].playlist.pos] !== undefined) {
+                rooms[socket.room].playlist.seekTime = time;
+                rooms[socket.room].playlist.timestamp = new Date().getTime();
+                socket.broadcast.to(socket.room).emit("seek", {
+                    t: time,
+                    url: rooms[socket.room].playlist.videos[rooms[socket.room].playlist.pos].url
+                });
+            }
+        }
+    });
+    socket.on("resync", function () {
+        io.sockets.connected[socket.id].emit("seek", {
+            t: ((new Date().getTime() - rooms[socket.room].playlist.timestamp) / 1000) + rooms[socket.room].playlist.seekTime,
+            url: rooms[socket.room].playlist.videos[rooms[socket.room].playlist.pos].url
+        })
+    })
+});
+
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+    var port = parseInt(val, 10);
+
+    if (isNaN(port)) {
+        // named pipe
+        return val;
+    }
+
+    if (port >= 0) {
+        // port number
+        return port;
+    }
+
+    return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
+
+    var bind = typeof port === 'string'
+        ? 'Pipe ' + port
+        : 'Port ' + port;
+
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+    var addr = server.address();
+    var bind = typeof addr === 'string'
+        ? 'pipe ' + addr
+        : 'port ' + addr.port;
+    debug('Listening on ' + bind);
+}

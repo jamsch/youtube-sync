@@ -1,0 +1,102 @@
+body {
+  background-color: #535353
+}
+
+#wrapper {
+  width:1200px;
+  margin: 0 auto;
+  min-width:700px;
+}
+
+#player, #chat, #users, #playlistContainer  {
+  height:480px;
+  outline:1px solid #000;
+  background-color: rgba(0,0,0,0.1);
+  float:left;
+}
+#users, #playlistContainer {
+  background-color: #f0f0f0;
+  overflow: auto;
+  overflow-x: hidden;
+}
+
+#player, #playlistContainer {
+  width:640px;
+}
+
+#playlistContainer {
+  max-height: 300px;
+}
+
+#users {
+  width:160px;
+}
+
+#chat {
+  width:300px;
+  background-color: #f0f0f0;
+}
+#msg {
+  width: 285px;
+  height: 40px;
+  padding-left: 12px;
+}
+#ctrls {
+  clear:both;
+}
+a:link, a:visited {
+  color: #00B7FF;
+  text-decoration:none;
+}
+
+.active, #playlist li:hover  {
+  background-color: #4a4a4a;
+  color:#d6d6d6;
+}
+
+#addVideo {
+  float:left;
+}
+
+#msgs {
+  height:435px;
+  overflow:auto;
+}
+#users ul {
+  margin: 0;
+  padding: 0;
+}
+#msgs li, #users ul li {
+  list-style-type: none;
+}
+#msgs li:hover, #users ul li:hover {
+  background-color: rgba(31, 62, 62, 0.05);
+  cursor: pointer;
+}
+#msgs>li>div, #users>ul>li>div {
+  margin-left: 10px;
+}
+
+#playlistContainer ol {
+  margin: 5px auto;
+  border-radius: 4px;
+  border: 1px solid #DDD;
+  padding: 0;
+  width:98%;
+}
+
+#playlist li {
+  counter-increment: step-counter;
+  list-style-type: none;
+  border-bottom: 1px solid #b8b8b8;
+}
+
+#playlist li a, #playlist li div:first-child::before  {
+  font-size: 1em;
+}
+
+#playlist li div:first-child::before {
+  content: counter(step-counter);
+  margin-right: 2px;
+  padding: 3px 8px;
+}
