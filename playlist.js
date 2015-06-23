@@ -9,7 +9,7 @@ function playlist() {
     this.locked = false;
     this.seekTime = 0;
     this.timestamp; //time when last seeked
-};
+}
 
 playlist.prototype.addVideo = function(videoID) {
     this.videos.push(new Video(videoID));
@@ -25,13 +25,17 @@ playlist.prototype.removeVideo = function(videoID) {
     }
     this.people.remove(videoIndex);
 };
+
 playlist.prototype.next = function() {
-    delete this.videos.timestamp;
     if (this.videos[this.pos+1] !== undefined) {
         this.pos++;
     } else {
         this.pos = 0;
     }
+    // Reset timestamp and seek time
+    this.timestamp = new Date().getTime();
+    this.seekTime = 0;
 };
+
 //todo move video function
 module.exports = playlist;

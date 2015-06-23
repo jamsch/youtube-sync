@@ -75,7 +75,6 @@ io.on("connection", function (socket) {
         if (rooms[socket.room] !== undefined) { //Only owner can go next (For now)
             if (rooms[socket.room].owner === socket.id) {
                 rooms[socket.room].playlist.next();
-                rooms[socket.room].playlist.timestamp = new Date().getTime();
                 io.sockets.in(socket.room).emit("next", rooms[socket.room].playlist.pos);
             }
         }
