@@ -71,18 +71,6 @@ io.on("connection", function (socket) {
         console.log(socket.username + " joined " + socket.room + ". Socket ID: " + socket.id);
     });
 
-    socket.on("videoStarted", function () {
-        if (rooms[socket.room].owner === socket.id) {
-            rooms[socket.room].playlist.timestamp = new Date().getTime();
-        } else {
-            // Resync video to user
-            io.sockets.connected[socket.id].emit("seek", {
-                t: ((new Date().getTime() - rooms[socket.room].playlist.timestamp) / 1000) + rooms[socket.room].playlist.seekTime,
-                url: rooms[socket.room].playlist.videos[rooms[socket.room].playlist.pos].url
-            })
-        }
-    });
-
     socket.on("next", function () {
         if (rooms[socket.room] !== undefined) { //Only owner can go next (For now)
             if (rooms[socket.room].owner === socket.id) {
