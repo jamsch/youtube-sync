@@ -6,6 +6,6 @@ function video(id) {
     this.title = id.name;
     this.duration = id.duration;
     this.via = id.username; // Added by username
-};
+}
 
 module.exports = video;

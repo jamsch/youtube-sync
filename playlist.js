@@ -33,5 +33,5 @@ playlist.prototype.next = function() {
         this.pos = 0;
     }
 };
-//move
+//todo move video function
 module.exports = playlist;

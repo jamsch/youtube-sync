@@ -6,14 +6,10 @@ function parseURL(url) {
     if (videoid != null) return videoid[1];
 }
 $(document).ready(function () {
+
     socket.on('seek', function (data) {
-        console.log(data.url, data.t);
-        if (player === undefined) return;
-        if (player.getVideoData()['video_id'] != data.url) {
-            loadVideoById(data.url, data.t);
-        } else {
-            player.seekTo(data.t + 0.5, true);
-        }
+        if (player.getVideoData === undefined) return;
+        player.seekTo(data.t + 0.5, true);
     });
 
     //inserts username to message
@@ -55,7 +51,6 @@ $(document).ready(function () {
             cmds[cmd](words[1]);
         } else {
             socket.emit("chat", msg);
-            console.log("sending " + msg);
         }
     });
 
@@ -117,22 +112,15 @@ $(document).ready(function () {
     });
 
     socket.on("videoAdded", function (data) {
-        var v = {
+        if (player === undefined) loadYTElement(data.url, 0);
+        playlist.push({
             "url": data.url,
             "title": data.title,
             "via": data.via
-        };
-        playlist.push(v);
-        $("#msgs").append("<li><div style='color:green'><strong>" + data.via + "</strong> added: <em>" + data.title + "</em></div></li>");
-
-        if (playerUndefined()) {
-            console.log("loaded video");
-            loadYTElement(data.url, 0);
-        }
+        });
         appendPlaylistItem(playlist.length-1);
+        $("#msgs").append("<li><div style='color:green'><strong>" + data.via + "</strong> added: <em>" + data.title + "</em></div></li>");
     });
-
-
 
     socket.on("disconnect", function () {
         $("#msgs").append("<li><strong>The server is not available. Please refresh your browser</strong></li>");

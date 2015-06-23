@@ -54,21 +54,19 @@ io.on("connection", function (socket) {
 
         rooms[room_name].addPerson(socket.id, username);
 
-        //Send playlist, and other info. Doesn't matter if the playlist is empty or not.
+        // Send playlist, and other info. Doesn't matter if the playlist is empty or not.
         io.sockets.connected[socket.id].emit("ackJoin", {
             username: username, //todo: avoid sending username
             pos: rooms[room_name].playlist.pos,
-            playlist: rooms[room_name].playlist.videos,
-            secondsIn: (new Date().getTime() - rooms[room_name].playlist.timestamp) / 1000 + rooms[room_name].playlist.seekTime
+            playlist: rooms[room_name].playlist.videos
         });
 
-        //Send
+        // Send username to the room to show who joined
         socket.broadcast.to(socket.room).emit("userJoined", socket.username);
 
         io.sockets.in(socket.room).emit("updateUsers", {
             users: rooms[socket.room].people,
-            owner: rooms[socket.room].owner,
-            mods: rooms[socket.room].mods
+            owner: rooms[socket.room].owner
         });
         console.log(socket.username + " joined " + socket.room + ". Socket ID: " + socket.id);
     });
@@ -76,6 +74,12 @@ io.on("connection", function (socket) {
     socket.on("videoStarted", function () {
         if (rooms[socket.room].owner === socket.id) {
             rooms[socket.room].playlist.timestamp = new Date().getTime();
+        } else {
+            // Resync video to user
+            io.sockets.connected[socket.id].emit("seek", {
+                t: ((new Date().getTime() - rooms[socket.room].playlist.timestamp) / 1000) + rooms[socket.room].playlist.seekTime,
+                url: rooms[socket.room].playlist.videos[rooms[socket.room].playlist.pos].url
+            })
         }
     });
 
@@ -100,8 +104,7 @@ io.on("connection", function (socket) {
             // For now, broadcast to all
             io.sockets.in(socket.room).emit("updateUsers", {  //  socket.broadcast.to
                 users: rooms[socket.room].people,
-                owner: rooms[socket.room].owner,
-                mods: rooms[socket.room].mods
+                owner: rooms[socket.room].owner
             });
         }
     });
@@ -175,8 +178,7 @@ io.on("connection", function (socket) {
         if (rooms[roomName] !== undefined) {
             io.sockets.in(socket.room).emit("updateUsers", {
                 users: rooms[roomName].people,
-                owner: rooms[roomName].owner,
-                mods: rooms[roomName].mods
+                owner: rooms[roomName].owner
             });
         }
     });
@@ -201,10 +203,14 @@ io.on("connection", function (socket) {
         }
     });
     socket.on("resync", function () {
-        io.sockets.connected[socket.id].emit("seek", {
-            t: ((new Date().getTime() - rooms[socket.room].playlist.timestamp) / 1000) + rooms[socket.room].playlist.seekTime,
-            url: rooms[socket.room].playlist.videos[rooms[socket.room].playlist.pos].url
-        })
+        try {
+            io.sockets.connected[socket.id].emit("seek", {
+                t: ((new Date().getTime() - rooms[socket.room].playlist.timestamp) / 1000) + rooms[socket.room].playlist.seekTime,
+                url: rooms[socket.room].playlist.videos[rooms[socket.room].playlist.pos].url
+            })
+        } catch (err) {
+            console.log(err);
+        }
     })
 });
 

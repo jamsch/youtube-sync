@@ -1,4 +1,3 @@
-var http = require("http");
 var https = require("https");
 
 /**
@@ -6,10 +5,9 @@ var https = require("https");
  * @param options: http options object
  * @param callback: callback to pass the results JSON object(s) back
  */
-exports.getJSON = function(options, onResult)
+exports.getJSON = function(options, callback)
 {
-    var prot = options.port == 443 ? https : http;
-    var req = prot.request(options, function(res)
+    var req = https.request(options, function(res)
     {
         var output = '';
         res.setEncoding('utf8');
@@ -19,13 +17,8 @@ exports.getJSON = function(options, onResult)
         });
 
         res.on('end', function() {
-            var obj = JSON.parse(output);
-            onResult(res.statusCode, obj);
+            callback(res.statusCode, JSON.parse(output));
         });
-    });
-
-    req.on('error', function(err) {
-        //res.send('error: ' + err.message);
     });
 
     req.end();

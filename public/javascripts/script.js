@@ -2,17 +2,7 @@
  * Created by James on 16/06/2015.
  */
 
-var tag = document.createElement('script');
-
-tag.src = "https://www.youtube.com/iframe_api";
-var firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-var playlist = [];
-var users = [];
-var player;
-
-function onYouTubeIframeAPIReady() {
+(function() {
     //lol
     var randomNameArr = ['ka', 'tu', 'mi', 'te', 'ku', 'lu', 'ji', 'ri',
         'ki', 'zu', 'me', 'ta', 'rin', 'to', 'mo', 'no', 'ke', 'shi',
@@ -23,27 +13,50 @@ function onYouTubeIframeAPIReady() {
     }
     socket.emit("join", name, roomName);
     socket.on("ackJoin", ackJoin);
+})();
+
+
+var tag = document.createElement('script');
+
+tag.src = "https://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+var playlist = [];
+var users = [];
+var player;
+var pos;
+var playerReady = false;
+
+function onYouTubeIframeAPIReady() {
+    if (playlist[pos] !== undefined) {
+        loadYTElement(playlist[pos].url);
+    }
+    playerReady = true;
 }
 
 function ackJoin(data) {
     $("#msgs").append("<li><div><strong>Joined room " + roomName + ".</strong><br>Your name is '" + data.username + "'. <br>Type !setname to set your username.</div></li>");
     if (data.playlist !== undefined) {
-        if (data.playlist[data.pos] !== undefined) { //in case a person joins a room with no videos
-            createPlaylist(data);
+        playlist = data.playlist;
+        pos = data.pos;
+        if (playlist[pos] !== undefined) { //in case a person joins a room with no videos
+            createPlaylist();
+            //if YT hasn't loaded when it was ready, and there's a video
+            if (playerReady && player === undefined) {
+                loadYTElement(playlist[pos].url);
+            }
         }
     }
 }
 
-function createPlaylist(data) {
-    playlist = data.playlist;
+function createPlaylist() {
     $('#playlist').empty();
     $.each(playlist, function (k, v) {
         appendPlaylistItem(k);
     });
-    $("#playlist li:eq(" + data.pos + ")").addClass('active');
-    var videoURL = playlist[data.pos] !== undefined ? playlist[data.pos].url : "";
-    var videoTime = data.secondsIn;
-    loadYTElement(videoURL, videoTime);
+    $("#playlist li:eq(" + pos + ")").addClass('active');
+
 }
 
 function appendPlaylistItem(pos) {
@@ -64,7 +77,8 @@ function updateUsers(data) {
     if (data !== undefined) {
         users = data.users;
         $.each(users, function (k, v) {
-            if (data.owner === k || data.mods[k]) { //
+            console.log(k);
+            if (data.owner === k || users[k].mod) { //
                 $('#users>ul').append("<li><div style='color:#00B7FF'>" + v.name + "</div></li>");
             } else
                 $('#users>ul').append("<li><div>" + v.name + "</div></li>");
@@ -72,11 +86,7 @@ function updateUsers(data) {
     }
 }
 
-function playerUndefined() {
-    return (player === undefined);
-}
-
-function loadYTElement(videoId, startSeconds) {
+function loadYTElement(videoId) {
     player = new YT.Player('player', {
         height: '390',
         width: '640',
@@ -84,10 +94,8 @@ function loadYTElement(videoId, startSeconds) {
         events: {
             'onReady': function (event) {
                 event.target.playVideo();
-                event.target.seekTo(startSeconds);
-                socket.emit("videoStarted"); //todo:check if owner
-            }
-            ,
+                socket.emit("resync");
+            },
             'onStateChange': onPlayerStateChange
         }
     });

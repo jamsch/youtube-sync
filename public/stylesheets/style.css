@@ -10,12 +10,11 @@ body {
 
 #player, #chat, #users, #playlistContainer  {
   height:480px;
-  outline:1px solid #000;
   background-color: rgba(0,0,0,0.1);
   float:left;
 }
 #users, #playlistContainer {
-  background-color: #f0f0f0;
+  background-color: #eaeaea;
   overflow: auto;
   overflow-x: hidden;
 }
@@ -41,15 +40,13 @@ body {
   height: 40px;
   padding-left: 12px;
 }
-#ctrls {
-  clear:both;
-}
+
 a:link, a:visited {
   color: #00B7FF;
   text-decoration:none;
 }
 
-.active, #playlist li:hover  {
+.active  {
   background-color: #4a4a4a;
   color:#d6d6d6;
 }
@@ -69,7 +66,7 @@ a:link, a:visited {
 #msgs li, #users ul li {
   list-style-type: none;
 }
-#msgs li:hover, #users ul li:hover {
+#msgs li:hover, #users ul li:hover, #playlist li:hover {
   background-color: rgba(31, 62, 62, 0.05);
   cursor: pointer;
 }
@@ -78,11 +75,12 @@ a:link, a:visited {
 }
 
 #playlistContainer ol {
+  background-color:#f0f0f0;
   margin: 5px auto;
   border-radius: 4px;
   border: 1px solid #DDD;
   padding: 0;
-  width:98%;
+  width:95%;
 }
 
 #playlist li {

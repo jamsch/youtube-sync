@@ -10,11 +10,12 @@ block content
                 input#msg(type='text',placeholder='Your Message',autocomplete="off")
         #users
             ul
-        #ctrls
-            form#addVideo
-                input#videoUrl(type='text', placeholder='video url', autocomplete="off")
-                input#addVideoBtn(type='submit', value='Add video')
-            input#next(type='button', value='Next')
-            input#resync(type='button', value='Resync')
+
         div#playlistContainer
+            #ctrls
+                form#addVideo
+                    input#videoUrl(type='text', placeholder='video url', autocomplete="off")
+                    input#addVideoBtn(type='submit', value='Add video')
+                input#next(type='button', value='Next')
+                input#resync(type='button', value='Resync')
             ol#playlist

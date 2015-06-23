@@ -5,7 +5,6 @@ var Playlist = require('./playlist.js');
 
 function Room(owner) {
     this.owner = owner;
-    this.mods = {};
     this.people = {};
     this.status = "available";
     this.size = 0;
@@ -17,28 +16,28 @@ function Room(owner) {
 
 Room.prototype.addPerson = function(id,name) {
     this.people[id] = {
-            name: name
-        };
+        name: name
+    };
     this.size++;
 };
 
 //todo mod user
 Room.prototype.modUser = function(id) {
     if (this.people[id] !== undefined) {
-        this.mods[id] = true;
+        this.people[id].mod = true;
         return true;
     }
     return false;
 };
 
 Room.prototype.isMod = function(id) {
-    return this.mods[id];
+    return this.people[id].mod;
 };
 
 //todo demod user
 Room.prototype.demodUser = function(id) {
     if (this.mods[id] !== undefined) {
-        delete this.mods[id];
+        delete this.people[id].mod;
         return true;
     }
     return false;
