@@ -33,7 +33,7 @@ sync.playlist = (function () {
             "via": data.via
         });
         self.totalDuration += data.duration;
-        self.append(self.videos[length-1]);
+        self.append(self.videos[self.videos.length-1]);
         $("#msgs").append("<li><div style='color:green'><strong>" + data.via + "</strong> added: <em>" + data.title + "</em></div></li>");
         sync.util.updatePlaylistInfo();
     };
@@ -60,12 +60,13 @@ sync.util = {
         var hours = parseInt(seconds / 3600) % 24 || 0;
         var minutes = parseInt(seconds / 60) % 60 || 0;
         var seconds = seconds % 60 || 0;
-        if (seconds < 10) {seconds = "0"+seconds;}
+        if (seconds < 10) seconds = "0"+seconds;
+        if (minutes < 10) minutes = "0"+minutes;
         var result = minutes + ":" + seconds;
         if (hours != 0) result = hours + ":" + result;
         return result;
     }
-}
+};
 
 
 sync.video = (function() {
