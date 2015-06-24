@@ -21,7 +21,7 @@ sync.playlist = (function () {
         sync.video.loadVideoById(self.videos[pos].url, 0);
     };
     self.addVideo = function(data) {
-        if (player === undefined) sync.video.load(data.url, 0);
+        if (sync.video.player === undefined) sync.video.load(data.url, 0);
         self.videos.push({
             "url": data.url,
             "title": data.title,
