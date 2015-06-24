@@ -8,8 +8,8 @@ function parseURL(url) {
 $(document).ready(function () {
 
     socket.on('seek', function (data) {
-        if (player.getVideoData === undefined) return;
-        player.seekTo(data.t + 0.5, true);
+        if (sync.video.player.getVideoData === undefined) return;
+        sync.video.player.seekTo(data.t + 0.5, true);
     });
 
     //inserts username to message
@@ -25,11 +25,7 @@ $(document).ready(function () {
         console.log(data);
     });
 
-    socket.on("next", function (pos) {
-        $('.active').removeClass('active');
-        $("#playlist li:eq(" + pos + ")").addClass('active');
-        loadVideoById(playlist[pos].url, 0);
-    });
+    socket.on("next", sync.playlist.loadVideo);
 
     $("form").submit(function (event) {
         event.preventDefault();
@@ -38,7 +34,7 @@ $(document).ready(function () {
         "!setname" : setName,
         "!del" : delVideo
     };
-    socket.on("updateUsers", updateUsers);
+    socket.on("updateUsers", sync.users.update);
     // main chat screen
     $("#chatForm").submit(function () {
         var msg = $("#msg").val();
@@ -83,7 +79,6 @@ $(document).ready(function () {
         var parsed = parseURL(videoUrl);
         if (parsed) {
             socket.emit("addVideo", {url: parsed});
-            console.log("adding video " + parsed);
         } else {
             $("#msgs").append("<li><span style='color:red'>Invalid video ID</span></li>");
         }
@@ -111,17 +106,7 @@ $(document).ready(function () {
         $("#msgs").append("<li><div><a style='color:green'>" + leaderName + " is the new leader of this room</a></div></li>");
     });
 
-    socket.on("videoAdded", function (data) {
-        if (player === undefined) loadYTElement(data.url, 0);
-        playlist.push({
-            "url": data.url,
-            "title": data.title,
-            "via": data.via
-        });
-        appendPlaylistItem(playlist.length-1);
-        $("#msgs").append("<li><div style='color:green'><strong>" + data.via + "</strong> added: <em>" + data.title + "</em></div></li>");
-    });
-
+    socket.on("videoAdded", sync.playlist.addVideo);
     socket.on("disconnect", function () {
         $("#msgs").append("<li><strong>The server is not available. Please refresh your browser</strong></li>");
         $("#msg").attr("disabled", "disabled");
@@ -131,7 +116,7 @@ $(document).ready(function () {
 
 function onPlayerStateChange(event) {
     if (event.data == YT.PlayerState.PLAYING) {
-        var time = getPlayerTime();
+        var time = sync.video.player.getCurrentTime();
         if (time !== 0) {
             socket.emit("seek", time);
         }
