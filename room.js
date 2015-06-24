@@ -48,7 +48,6 @@ Room.prototype.isPrivate = function() {
     return this.private;
 };
 
-
 Room.prototype.addVideo = function(video) {
    this.playlist.addVideo(video);
 };

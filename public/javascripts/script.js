@@ -2,18 +2,22 @@
  * Created by James on 16/06/2015.
  */
 
-var sync = {};
+var sync = sync || {};
 
 sync.playlist = (function () {
     var self = {};
     self.videos = [];
     self.pos;
+    self.totalDuration = 0;
     self.createPlaylist = function () {
         $('#playlist').empty();
+        console.log(self.videos);
         $.each(self.videos, function (k) {
-            self.append(k);
+            self.append(self.videos[k]);
+            self.totalDuration += self.videos[k].duration;
         });
         $("#playlist li:eq(" + self.pos + ")").addClass('active');
+        sync.util.updatePlaylistInfo();
     };
     self.loadVideo = function(pos) {
         $('.active').removeClass('active');
@@ -25,24 +29,43 @@ sync.playlist = (function () {
         self.videos.push({
             "url": data.url,
             "title": data.title,
+            "duration": data.duration,
             "via": data.via
         });
-        self.append(self.videos.length-1);
+        self.totalDuration += data.duration;
+        self.append(self.videos[length-1]);
         $("#msgs").append("<li><div style='color:green'><strong>" + data.via + "</strong> added: <em>" + data.title + "</em></div></li>");
+        sync.util.updatePlaylistInfo();
     };
-    self.append = function(pos) {
+    self.append = function(video) {
         $('#playlist').append(
             "<li>" +
             "<div>" +
-                self.videos[pos].title + "<span style='float:right'><a href='https://www.youtube.com/watch?v=" + self.videos[pos].url + "'>(link)</a></span>" +
+                video.title + "<span style='float:right'><a href='https://www.youtube.com/watch?v=" + video.url + "'>(link)</a></span>" +
             "</div>" +
             "<div>" +
-            "via " + self.videos[pos].via +
+            "via " + video.via + "<span style='float:right'><a>" + sync.util.parseSeconds(video.duration) + "</a></span>" +
             "</div>" +
             "</li>");
     };
     return self;
 }());
+
+sync.util = {
+    updatePlaylistInfo: function() {
+        $(".duration").html(this.parseSeconds(sync.playlist.totalDuration));
+        $(".numVideos").html(sync.playlist.videos.length + " Video(s)");
+    },
+    parseSeconds: function(seconds) {
+        var hours = parseInt(seconds / 3600) % 24 || 0;
+        var minutes = parseInt(seconds / 60) % 60 || 0;
+        var seconds = seconds % 60 || 0;
+        if (seconds < 10) {seconds = "0"+seconds;}
+        var result = minutes + ":" + seconds;
+        if (hours != 0) result = hours + ":" + result;
+        return result;
+    }
+}
 
 
 sync.video = (function() {
@@ -72,17 +95,28 @@ sync.video = (function() {
 sync.users = (function () {
     var self = {};
     self.users = [];
+    var name;
     self.update = function(data) {
         $('#users>ul').empty(); //empty user list;
         if (data.users !== undefined) {
             self.users = data.users;
             $.each(self.users, function (k, v) {
-                if (data.owner === k || self.users[k].mod) { //
-                    $('#users>ul').append("<li><div style='color:#00B7FF'>" + v.name + "</div></li>");
-                } else
-                    $('#users>ul').append("<li><div>" + v.name + "</div></li>");
+                appendUser(v, data.owner === k || self.users[k].mod);
             });
         }
+    };
+    var appendUser = function(user,isModOrOwner) {
+        if (isModOrOwner) {
+            $('#users>ul').append("<li><div style='color:#00B7FF'>" + user.name + "</div></li>");
+        } else {
+            $('#users>ul').append("<li><div>" + user.name + "</div></li>");
+        }
+    };
+    self.getName = function() {
+        return name;
+    };
+    self.setName = function(value) {
+        name = value;
     };
     return self;
 }());

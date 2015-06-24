@@ -13,11 +13,11 @@ $(document).ready(function () {
     });
 
     //inserts username to message
-    $("#users").on("click", "ul li div", function(){
+    $("#users").on("click", "ul li div", function () {
         $("#msg").val($("#msg").val() + " " + $(this).html());
     });
 
-    $("#resync").click(function(){
+    $("#resync").click(function () {
         socket.emit("resync");
     });
 
@@ -30,40 +30,39 @@ $(document).ready(function () {
     $("form").submit(function (event) {
         event.preventDefault();
     });
+
     var cmds = {
-        "!setname" : setName,
-        "!del" : delVideo
+        "!setname": function (name) {
+            if (name === "" || name === undefined || name.length > 20) {
+                $("#msgs").append("<li><span style='color:red'>Invalid username</span></li>");
+                return;
+            }
+            socket.emit("setName", name);
+        },
+        "!del": function (pos) {
+            socket.emit("deleteVideo", pos)
+        }
     };
+    socket.on("deleteVideo", sync.playlist.deleteVideo);
+    socket.on("nameChanged", sync.users.setName);
     socket.on("updateUsers", sync.users.update);
     // main chat screen
     $("#chatForm").submit(function () {
         var msg = $("#msg").val();
         $("#msg").val("");
-
         if (msg === "") return;
         var words = msg.split(' ');
         var cmd = words[0];
-        if (cmds[cmd]) {
+        if (cmds[cmd]) // if the first word is a valid command
             cmds[cmd](words[1]);
-        } else {
+        else
             socket.emit("chat", msg);
-        }
     });
 
     //todo:delete functionality
     //todo:resend playlist to users in room
     function delVideo(id) {
         socket.emit("delVideo", id);
-    }
-
-    function setName(name)
-    {
-        if (name === "" || name === undefined || name.length > 20) {
-            $("#msgs").append("<li><span style='color:red'>Invalid username</span></li>");
-            return;
-        }
-        console.log("Set name to " + name);
-        socket.emit("setName", name);
     }
 
     $("#next").click(function () {
@@ -82,6 +81,10 @@ $(document).ready(function () {
         } else {
             $("#msgs").append("<li><span style='color:red'>Invalid video ID</span></li>");
         }
+    });
+
+    socket.on("invalidVideo", function() {
+        $("#msgs").append("<li><span style='color:red'>Invalid video ID</span></li>");
     });
 
     socket.on("chat", function (person, msg) {

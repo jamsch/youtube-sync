@@ -35,12 +35,12 @@ server.on('listening', onListening);
 var io = require('socket.io')(server);
 var uuid = require('uuid');
 var Room = require('../room.js');
-var getJSON = require('../getJSON');
+var util = require('../util');
 var rooms = []; // Array of Room objects
 
 io.on("connection", function (socket) {
-    socket.on("join", function (username, room_name) {
 
+    socket.on("join", function (username, room_name) {
         // if Room is new/empty
         if (rooms[room_name] === undefined) {
             rooms[room_name] = new Room(socket.id);
@@ -99,7 +99,6 @@ io.on("connection", function (socket) {
     socket.on("addVideo", function (data) {
         //todo: check if video already exists in playlist
         //TODO check if user can add videos to this room
-        //TODO check if video is valid input
         var api = "AIzaSyBacpszKfy_j9IqiAvhhqtkhvQDTdVTx48";
         var options = {
             host: 'www.googleapis.com',
@@ -107,17 +106,17 @@ io.on("connection", function (socket) {
             method: 'GET',
             port: 443
         };
-        getJSON.getJSON(options, function (statusCode, arr) {
-            //200
+        util.getJSON(options, function (statusCode, arr) {
+            if (arr.items.length < 1) {
+                io.sockets.connected[socket.id].emit("invalidVideo");
+                return;
+            }
             if (statusCode == 200) {
-                for (var key in arr.items) {
-                    data.name = arr.items[key].snippet.title;
-                    break;
-                }
+                data.name = arr.items[0].snippet.title;
+                data.duration = util.parseDuration(arr.items[0].contentDetails.duration);
                 data.username = socket.username;
                 rooms[socket.room].addVideo(data);
                 var videos = rooms[socket.room].playlist.videos;
-                //todo: emit from username
                 io.sockets.in(socket.room).emit("videoAdded", videos[videos.length - 1]);
             } else {
                 console.log("Error with getting json data from YT API - " + statusCode);

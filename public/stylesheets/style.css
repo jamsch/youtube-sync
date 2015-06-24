@@ -8,22 +8,22 @@ body {
   min-width:700px;
 }
 
-#player, #chat, #users, #playlistContainer  {
+#player, #chat, #users, #content {
   height:480px;
   background-color: rgba(0,0,0,0.1);
   float:left;
 }
-#users, #playlistContainer {
+#users, #content {
   background-color: #eaeaea;
   overflow: auto;
   overflow-x: hidden;
 }
 
-#player, #playlistContainer {
+#player, #content {
   width:640px;
 }
 
-#playlistContainer {
+#content {
   max-height: 300px;
 }
 
@@ -55,14 +55,20 @@ a:link, a:visited {
   float:left;
 }
 
-#msgs {
-  height:435px;
-  overflow:auto;
-}
 #users ul {
   margin: 0;
   padding: 0;
 }
+
+/**
+  Chatbox
+**/
+
+#msgs {
+  height:435px;
+  overflow:auto;
+}
+
 #msgs li, #users ul li {
   list-style-type: none;
 }
@@ -74,7 +80,11 @@ a:link, a:visited {
   margin-left: 10px;
 }
 
-#playlistContainer ol {
+/**
+  Playlist
+**/
+
+#content ol {
   background-color:#f0f0f0;
   margin: 5px auto;
   border-radius: 4px;
@@ -83,10 +93,21 @@ a:link, a:visited {
   width:95%;
 }
 
+#playlistContainer {
+  height: 85%;
+  overflow-y: scroll;
+}
+
+
 #playlist li {
   counter-increment: step-counter;
   list-style-type: none;
   border-bottom: 1px solid #b8b8b8;
+}
+
+#playlist li div {
+  text-overflow: ellipsis;
+  overflow:hidden;
 }
 
 #playlist li a, #playlist li div:first-child::before  {
@@ -97,4 +118,19 @@ a:link, a:visited {
   content: counter(step-counter);
   margin-right: 2px;
   padding: 3px 8px;
+}
+
+/**
+  Info
+**/
+
+#info {
+  margin-top: 5px;
+}
+#info .numVideos {
+  float:left;
+}
+
+#info .duration {
+  float:right;
 }
