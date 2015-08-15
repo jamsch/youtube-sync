@@ -72,7 +72,7 @@ a:link, a:visited {
 #msgs li, #users ul li {
   list-style-type: none;
 }
-#msgs li:hover, #users ul li:hover, #playlist li:hover:not(.active) {
+#msgs li:hover, #users ul li:hover, #videos li:hover:not(.active) {
   background-color: rgba(31, 62, 62, 0.05);
   cursor: pointer;
 }
@@ -93,28 +93,28 @@ a:link, a:visited {
   width:95%;
 }
 
-#playlistContainer {
+#roomPlaylist {
   height: 85%;
   overflow-y: scroll;
 }
 
 
-#playlist li {
+#videos li {
   counter-increment: step-counter;
   list-style-type: none;
   border-bottom: 1px solid #b8b8b8;
 }
 
-#playlist li div {
+#videos li div {
   text-overflow: ellipsis;
   overflow:hidden;
 }
 
-#playlist li a, #playlist li div:first-child::before  {
+#videos li a, #videos li div:first-child::before  {
   font-size: 1em;
 }
 
-#playlist li div:first-child::before {
+#videos li div:first-child::before {
   content: counter(step-counter);
   margin-right: 2px;
   padding: 3px 8px;

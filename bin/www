@@ -57,6 +57,7 @@ io.on("connection", function (socket) {
         // Send playlist, and other info. Doesn't matter if the playlist is empty or not.
         io.sockets.connected[socket.id].emit("ackJoin", {
             username: username, //todo: avoid sending username
+            uid: socket.id,
             pos: rooms[room_name].playlist.pos,
             playlist: rooms[room_name].playlist.videos
         });
@@ -95,33 +96,46 @@ io.on("connection", function (socket) {
             });
         }
     });
-
     socket.on("addVideo", function (data) {
         //todo: check if video already exists in playlist
         //TODO check if user can add videos to this room
         var api = "AIzaSyBacpszKfy_j9IqiAvhhqtkhvQDTdVTx48";
-        var options = {
-            host: 'www.googleapis.com',
-            path: '/youtube/v3/videos?id=' + data.url + '&key=' + api + '&part=snippet,contentDetails',
-            method: 'GET',
-            port: 443
-        };
-        util.getJSON(options, function (statusCode, arr) {
-            if (arr.items.length < 1) {
-                io.sockets.connected[socket.id].emit("invalidVideo");
-                return;
-            }
-            if (statusCode == 200) {
-                data.name = arr.items[0].snippet.title;
-                data.duration = util.parseDuration(arr.items[0].contentDetails.duration);
-                data.username = socket.username;
-                rooms[socket.room].addVideo(data);
-                var videos = rooms[socket.room].playlist.videos;
-                io.sockets.in(socket.room).emit("videoAdded", videos[videos.length - 1]);
-            } else {
-                console.log("Error with getting json data from YT API - " + statusCode);
-            }
-        });
+        if (data.url.indexOf('playlist?list=') != -1) {
+            //todo check if user is owner/mod
+            var playlist = data.url.replace('playlist?list=', '');
+            var options = {
+                host: 'www.googleapis.com',
+                path: '/youtube/v3/playlistItems?key=' + api + '&part=contentDetails,snippet' + '&playlistId=' + playlist + '&maxResults=50',
+                method: 'GET',
+                port: 443
+            };
+            util.getPlaylistVideos(options, playlist, [], function (videos) {
+                console.log(videos);
+            });
+        } else {
+            var options = {
+                host: 'www.googleapis.com',
+                path: '/youtube/v3/videos?id=' + data.url + '&key=' + api + '&part=snippet,contentDetails',
+                method: 'GET',
+                port: 443
+            };
+            util.getJSON(options, function (statusCode, arr) {
+                if (arr.items.length < 1) {
+                    io.sockets.connected[socket.id].emit("invalidVideo");
+                    return;
+                }
+                if (statusCode == 200) {
+                    data.name = arr.items[0].snippet.title;
+                    data.duration = util.parseDuration(arr.items[0].contentDetails.duration);
+                    data.username = socket.username;
+                    rooms[socket.room].addVideo(data);
+                    var videos = rooms[socket.room].playlist.videos;
+                    io.sockets.in(socket.room).emit("videoAdded", videos[videos.length - 1]);
+                } else {
+                    console.log("Error with getting json data from YT API - " + statusCode);
+                }
+            });
+        }
     });
 
     socket.on("chat", function (msg) {
@@ -174,9 +188,11 @@ io.on("connection", function (socket) {
             socket.disconnect(); // In case someone emits a seek without joining a room
             return;
         }
-        //only allow owner to seek
+        // only allow owner to seek, todo allow mods to seek
         if (rooms[socket.room].owner === socket.id) {
-            //todo: verify time and url
+            // todo: verify time and url
+            // Check if owner hasn't already 'seeked' a second ago
+            if (((new Date().getTime() - rooms[socket.room].playlist.timestamp) / 1000) < 1) return;
             console.log("Owner [" + socket.room + "] seeked to [" + time + "]");
             if (rooms[socket.room].playlist.videos[rooms[socket.room].playlist.pos] !== undefined) {
                 rooms[socket.room].playlist.seekTime = time;
@@ -197,7 +213,10 @@ io.on("connection", function (socket) {
         } catch (err) {
             console.log(err);
         }
-    })
+    });
+    socket.on("shuffle", function () {
+        //todo owner shuffle video array
+    });
 });
 
 

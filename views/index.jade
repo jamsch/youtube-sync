@@ -12,13 +12,14 @@ block content
             ul
         #content
             #ctrls
-                form#addVideo
-                    input#videoUrl(type='text', placeholder='video url', autocomplete="off")
+                form#addVideo(autocomplete="off")
+                    input#videoUrl(type='text', placeholder='video url')
                     input#addVideoBtn(type='submit', value='Add video')
                 input#next(type='button', value='Next')
                 input#resync(type='button', value='Resync')
-            #playlistContainer
-                ol#playlist
+                input#shuffle(type='button', value='Shuffle')
+            #roomPlaylist
+                ol#videos
             #info
                 .numVideos
                 .duration

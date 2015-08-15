@@ -12,13 +12,12 @@ $(document).ready(function () {
         sync.video.player.seekTo(data.t + 0.5, true);
     });
 
-    //inserts username to message
-    $("#users").on("click", "ul li div", function () {
-        $("#msg").val($("#msg").val() + " " + $(this).html());
-    });
-
     $("#resync").click(function () {
         socket.emit("resync");
+    });
+
+    $("#shuffle").click(function () {
+        socket.emit("shuffle");
     });
 
     socket.on("users", function (data) {
@@ -32,20 +31,27 @@ $(document).ready(function () {
     });
 
     var cmds = {
-        "!setname": function (name) {
+        "/setname": function (name) {
             if (name === "" || name === undefined || name.length > 20) {
                 $("#msgs").append("<li><span style='color:red'>Invalid username</span></li>");
                 return;
             }
             socket.emit("setName", name);
         },
-        "!del": function (pos) {
+        "/del": function (pos) {
             socket.emit("deleteVideo", pos)
         }
     };
     socket.on("deleteVideo", sync.playlist.deleteVideo);
     socket.on("nameChanged", sync.users.setName);
     socket.on("updateUsers", sync.users.update);
+
+    //inserts username to message
+    $("#users").on("click", "ul li div", function () {
+        $("#msg").val($("#msg").val() + " " + $(this).html() + " ");
+        $("#msg").focus();
+    });
+
     // main chat screen
     $("#chatForm").submit(function () {
         var msg = $("#msg").val();
@@ -68,7 +74,10 @@ $(document).ready(function () {
     $("#next").click(function () {
         //todo:check if owner
         //perhaps give position # for custom next, not just 1
-        socket.emit("next");
+        if (sync.users.owner == sync.users.uid)
+            socket.emit("next");
+        else
+            $("#msgs").append("<li><span style='color:red'>Error: You are not a mod</span></li>");
     });
 
     $("#addVideo").submit(function () {

@@ -10,18 +10,19 @@ sync.playlist = (function () {
     self.pos;
     self.totalDuration = 0;
     self.createPlaylist = function () {
-        $('#playlist').empty();
+        $('#videos').empty();
         console.log(self.videos);
         $.each(self.videos, function (k) {
             self.append(self.videos[k]);
             self.totalDuration += self.videos[k].duration;
         });
-        $("#playlist li:eq(" + self.pos + ")").addClass('active');
+        $("#videos li:eq(" + self.pos + ")").addClass('active');
+        console.log("adding class active to pos ");
         sync.util.updatePlaylistInfo();
     };
     self.loadVideo = function(pos) {
         $('.active').removeClass('active');
-        $("#playlist li:eq(" + pos + ")").addClass('active');
+        $("#videos li:eq(" + pos + ")").addClass('active');
         sync.video.loadVideoById(self.videos[pos].url, 0);
     };
     self.addVideo = function(data) {
@@ -38,7 +39,7 @@ sync.playlist = (function () {
         sync.util.updatePlaylistInfo();
     };
     self.append = function(video) {
-        $('#playlist').append(
+        $('#videos').append(
             "<li>" +
             "<div>" +
                 video.title + "<span style='float:right'><a href='https://www.youtube.com/watch?v=" + video.url + "'>(link)</a></span>" +
@@ -54,7 +55,7 @@ sync.playlist = (function () {
 sync.util = {
     updatePlaylistInfo: function() {
         $(".duration").html(this.parseSeconds(sync.playlist.totalDuration));
-        $(".numVideos").html(sync.playlist.videos.length + " Video(s)");
+        $(".numVideos").html(sync.playlist.videos.length + " video(s)");
     },
     parseSeconds: function(seconds) {
         var hours = parseInt(seconds / 3600) % 24 || 0;
@@ -96,8 +97,11 @@ sync.video = (function() {
 sync.users = (function () {
     var self = {};
     self.users = [];
+    self.uid = 0;
+    self.owner;
     var name;
     self.update = function(data) {
+        self.owner = data.owner;
         $('#users>ul').empty(); //empty user list;
         if (data.users !== undefined) {
             self.users = data.users;
@@ -135,12 +139,15 @@ function onYouTubeIframeAPIReady() {
         'ki', 'zu', 'me', 'ta', 'rin', 'to', 'mo', 'no', 'ke', 'shi',
         'ari', 'chi', 'do', 'ru', 'mei', 'na', 'fu', 'zi'];
     var name = "";
-    for (var i = 0; i < Math.random() * 8; i++) {
+    for (var i = 0; i < Math.random() * 9; i++) {
         name += randomNameArr[Math.ceil(Math.random() * randomNameArr.length) - 1];
     }
     socket.emit("join", name, roomName);
     socket.on("ackJoin", function (data) {
-        $("#msgs").append("<li><div><strong>Joined room " + roomName + ".</strong><br>Your name is '" + data.username + "'. <br>Type !setname to set your username.</div></li>");
+        sync.users.uid = data.uid;
+        $("#msgs").append(  "<li><div><strong>Joined room " + roomName + ".</strong>" +
+                            "<br>Your name is '" + data.username + "'. <br>" +
+                            "Type /setname to set your username.</div></li>");
         if (data.playlist !== undefined) {
             sync.playlist.videos = data.playlist;
             sync.playlist.pos = data.pos;
