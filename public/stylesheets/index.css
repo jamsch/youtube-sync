@@ -1,0 +1,38 @@
+
+.imgContainer {
+    position: relative;
+    height: 180px;
+    width: 320px;
+}
+
+.imgContainer a {
+    color: #fff !important;
+    font-size: 0.8em;
+}
+.tag {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+    background-color: rgba(0,0,0,0.4);
+    text-overflow: ellipsis;
+    width:95%;
+    padding: 2.5%;
+    color: #fff;
+    font-weight: bold;
+}
+
+.tag:hover {
+    cursor: pointer;
+    background-color: #000;
+}
+
+#rooms {
+    width:100%;
+}
+
+#rooms li {
+    padding:5px;
+    float:left;
+    list-style-type: none;
+}

@@ -1,25 +1,25 @@
-extends layout
-block content
-    header
-        h1 Welcome to #{room}
-    #wrapper
-        #player
-        #chat
-            #msgs
-            form#chatForm
-                input#msg(type='text',placeholder='Your Message',autocomplete="off")
-        #users
-            ul
-        #content
-            #ctrls
-                form#addVideo(autocomplete="off")
-                    input#videoUrl(type='text', placeholder='video url')
-                    input#addVideoBtn(type='submit', value='Add video')
-                input#next(type='button', value='Next')
-                input#resync(type='button', value='Resync')
-                input#shuffle(type='button', value='Shuffle')
-            #roomPlaylist
-                ol#videos
-            #info
-                .numVideos
-                .duration
+doctype html
+html
+    head
+        title= title
+        link(rel='stylesheet', href='/stylesheets/index.css')
+        link(rel='stylesheet', href='/stylesheets/site.css')
+    body
+        #wrapper
+           header
+           h1 What is yt-sync?
+           a yt-sync is a lightweight, interactive website that integrates a live YouTube feed with users and a chatroom
+           h3 How do I create my own room?
+           a Rooms are made (or joined) by manually typing in your room name after the website URL. For example /myroom
+           h3 Rooms
+           ul#rooms
+            each room in rooms
+                 li
+                    .imgContainer
+                        a.tag(href=room.name)
+                            =room.playing.title
+                            br
+                            =room.name
+                            br
+                            =room.size + ' viewer(s)'
+                        img(src='https://i.ytimg.com/vi/' + room.playing.url + '/mqdefault.jpg')

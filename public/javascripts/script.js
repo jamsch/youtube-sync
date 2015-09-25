@@ -35,7 +35,7 @@ sync.playlist = (function () {
         });
         self.totalDuration += data.duration;
         self.append(self.videos[self.videos.length-1]);
-        $("#msgs").append("<li><div style='color:green'><strong>" + data.via + "</strong> added: <em>" + data.title + "</em></div></li>");
+        $("#chatbox").append("<li><div style='color:green'><strong>" + data.via + "</strong> added: <em>" + data.title + "</em></div></li>");
         sync.util.updatePlaylistInfo();
     };
     self.append = function(video) {
@@ -98,7 +98,7 @@ sync.users = (function () {
     var self = {};
     self.users = [];
     self.uid = 0;
-    self.owner;
+    self.owner; //todo use
     var name;
     self.update = function(data) {
         self.owner = data.owner;
@@ -126,6 +126,18 @@ sync.users = (function () {
     return self;
 }());
 
+sync.chat = (function () {
+    var self = {};
+    //todo: chat log array
+    self.append = function(msg, style) {
+        if (typeof style != 'undefined')
+          $("#chatbox").append("<li style=' + style + '>" + msg + "</li>");
+        else
+          $("#chatbox").append("<li>" + msg + "</li>");
+    };
+    return self;
+}());
+
 var playerReady = false;
 function onYouTubeIframeAPIReady() {
     if (sync.playlist.videos[sync.playlist.pos] !== undefined) {
@@ -145,9 +157,9 @@ function onYouTubeIframeAPIReady() {
     socket.emit("join", name, roomName);
     socket.on("ackJoin", function (data) {
         sync.users.uid = data.uid;
-        $("#msgs").append(  "<li><div><strong>Joined room " + roomName + ".</strong>" +
-                            "<br>Your name is '" + data.username + "'. <br>" +
-                            "Type /setname to set your username.</div></li>");
+        sync.chat.append( "<div><strong>Joined room " + roomName + ".</strong>" +
+                          "<br>Your name is '" + data.username + "'. <br>" +
+                          "Type /setname to set your username.</div>" );
         if (data.playlist !== undefined) {
             sync.playlist.videos = data.playlist;
             sync.playlist.pos = data.pos;

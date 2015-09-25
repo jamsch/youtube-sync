@@ -1,0 +1,26 @@
+extends layout
+block content
+    header
+        h1 Welcome to #{room}
+    #wrapper
+        #player
+        #chat
+            #chatbox
+            form#chatForm
+                input#msg(type='text',autocomplete="off")
+        #users
+            ul
+        #content
+            #ctrls
+                form#addVideo(autocomplete="off")
+                    input#videoUrl(type='text', placeholder='video url')
+                    input#addVideoBtn(type='submit', value='Add video')
+                input#next(type='button', value='Next')
+                input#resync(type='button', value='Resync')
+                input#clearPlayed(type='button', value="Clear")
+                input#shuffle(type='button', value='Shuffle')
+            #roomPlaylist
+                ol#videos
+            #info
+                .numVideos
+                .duration

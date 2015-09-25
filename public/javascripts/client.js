@@ -33,7 +33,7 @@ $(document).ready(function () {
     var cmds = {
         "/setname": function (name) {
             if (name === "" || name === undefined || name.length > 20) {
-                $("#msgs").append("<li><span style='color:red'>Invalid username</span></li>");
+                sync.chat.append("Invalid username", "color:red");
                 return;
             }
             socket.emit("setName", name);
@@ -46,7 +46,7 @@ $(document).ready(function () {
     socket.on("nameChanged", sync.users.setName);
     socket.on("updateUsers", sync.users.update);
 
-    //inserts username to message
+    // Insert username from user list to message
     $("#users").on("click", "ul li div", function () {
         $("#msg").val($("#msg").val() + " " + $(this).html() + " ");
         $("#msg").focus();
@@ -68,6 +68,7 @@ $(document).ready(function () {
     //todo:delete functionality
     //todo:resend playlist to users in room
     function delVideo(id) {
+        console.log("deleting video " + id);
         socket.emit("delVideo", id);
     }
 
@@ -77,7 +78,7 @@ $(document).ready(function () {
         if (sync.users.owner == sync.users.uid)
             socket.emit("next");
         else
-            $("#msgs").append("<li><span style='color:red'>Error: You are not a mod</span></li>");
+            sync.chat.append("Error: You are not a mod", "color:red");
     });
 
     $("#addVideo").submit(function () {
@@ -88,39 +89,43 @@ $(document).ready(function () {
         if (parsed) {
             socket.emit("addVideo", {url: parsed});
         } else {
-            $("#msgs").append("<li><span style='color:red'>Invalid video ID</span></li>");
+            sync.chat.append("Invalid video ID", "color:red");
         }
     });
+    $("#clearPlayed").click(function() {
+        socket.emit("clearPlayed");
+       // delVideo(sync.playlist.videos[sync.playlist.pos].url);
+    });
 
-    socket.on("invalidVideo", function() {
-        $("#msgs").append("<li><span style='color:red'>Invalid video ID</span></li>");
+    socket.on("error", function(msg) {
+        sync.chat.append(msg, "color:red");
     });
 
     socket.on("chat", function (person, msg) {
-        $("#msgs").append("<li><div><strong>" + person + "</strong>: " + msg + "</div></li>");
-        $('#msgs').scrollTop($('#msgs')[0].scrollHeight);
+        sync.chat.append("<div><strong>" + person + "</strong>: " + msg + "</div>");
+        $('#chatbox').scrollTop($('#chatbox')[0].scrollHeight);
     });
 
     socket.on("update", function (msg) {
-        $("#msgs").append("<li><div>" + msg + "</div></li>");
+        sync.chat.append(msg);
     });
 
     socket.on("userLeft", function (userName) {
-        $("#msgs").append("<li><div style='color:red'>" + userName + " has disconnected</div></li>");
+        sync.chat.append(userName + " has disconnected", "color:red")
     });
 
     socket.on("userJoined", function (userName) {
-        $("#msgs").append("<li><div style='color:green'>" + userName + " has joined</div></li>");
+        sync.chat.append(userName + " has joined", "color:green");
     });
 
     socket.on("newLeader", function (leaderName) {
         //todo: set leader status on peopleOnline array
-        $("#msgs").append("<li><div><a style='color:green'>" + leaderName + " is the new leader of this room</a></div></li>");
+        sync.chat.append(leaderName + " is the new leader of this room", "color:green");
     });
 
     socket.on("videoAdded", sync.playlist.addVideo);
     socket.on("disconnect", function () {
-        $("#msgs").append("<li><strong>The server is not available. Please refresh your browser</strong></li>");
+        sync.chat.append("<strong>The server is not available. Please refresh your browser</strong>");
         $("#msg").attr("disabled", "disabled");
         $("#addVideoBtn").attr("disabled", "disabled");
     });
