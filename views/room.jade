@@ -5,20 +5,19 @@ block content
     #wrapper
         #player
         #chat
-            #chatbox
+            ul#chatbox
             form#chatForm
                 input#msg(type='text',autocomplete="off")
         #users
             ul
         #content
             #ctrls
-                form#addVideo(autocomplete="off")
-                    input#videoUrl(type='text', placeholder='video url')
-                    input#addVideoBtn(type='submit', value='Add video')
-                input#next(type='button', value='Next')
-                input#resync(type='button', value='Resync')
-                input#clearPlayed(type='button', value="Clear")
-                input#shuffle(type='button', value='Shuffle')
+                input#videoUrl(type='text', placeholder='video url')
+                button(type='button')#addVideoBtn Add video
+                button(type='button')#next Next
+                button(type='button')#resync Resync
+                button(type='button')#clearPlayed Clear
+                button(type='button')#shuffle Shuffle
             #roomPlaylist
                 ol#videos
             #info

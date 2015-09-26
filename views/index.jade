@@ -8,7 +8,7 @@ html
         #wrapper
            header
            h1 What is yt-sync?
-           a yt-sync is a lightweight, interactive website that integrates a live YouTube feed with users and a chatroom
+           a yt-sync is a lightweight, interactive website that integrates a live, synchronised YouTube playlist feed with users and a chatroom
            h3 How do I create my own room?
            a Rooms are made (or joined) by manually typing in your room name after the website URL. For example /myroom
            h3 Rooms
@@ -16,10 +16,14 @@ html
             each room in rooms
                  li
                     .imgContainer
-                        a.tag(href=room.name)
+                        a.tag(href="/r/" + room.name)
                             =room.playing.title
                             br
                             =room.name
                             br
                             =room.size + ' viewer(s)'
                         img(src='https://i.ytimg.com/vi/' + room.playing.url + '/mqdefault.jpg')
+           div(style='clear:both')
+                h3 Create a room
+                input(type='text', placeholder='Room name')#roomName
+                button(type='button', onclick="location.href = 'http://' + window.location.host + '/r/' + document.getElementById('roomName').value")#createRoom Create Room

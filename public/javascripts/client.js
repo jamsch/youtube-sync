@@ -1,19 +1,17 @@
 /**
  * Created by James on 10/06/2015.
  */
-function parseURL(url) {
-    var videoid = url.match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/);
-    if (videoid != null) return videoid[1];
-}
+
 $(document).ready(function () {
 
     socket.on('seek', function (data) {
-        if (sync.video.player.getVideoData === undefined) return;
-        sync.video.player.seekTo(data.t + 0.5, true);
+        if (!sync.youtube.loaded) return;
+        if (sync.youtube.player.getVideoData === undefined) return;
+        sync.youtube.player.seekTo(data.t + 0.5, true);
     });
 
     $("#resync").click(function () {
-        socket.emit("resync");
+        socket.emit("resync");   // todo timed interval resync
     });
 
     $("#shuffle").click(function () {
@@ -42,6 +40,7 @@ $(document).ready(function () {
             socket.emit("deleteVideo", pos)
         }
     };
+
     socket.on("deleteVideo", sync.playlist.deleteVideo);
     socket.on("nameChanged", sync.users.setName);
     socket.on("updateUsers", sync.users.update);
@@ -81,11 +80,11 @@ $(document).ready(function () {
             sync.chat.append("Error: You are not a mod", "color:red");
     });
 
-    $("#addVideo").submit(function () {
+    $("#addVideoBtn").click(function () {
         //todo:check if video already exists on client and server
         var videoUrl = $("#videoUrl").val();
         $("#videoUrl").val("");
-        var parsed = parseURL(videoUrl);
+        var parsed = sync.util.parseURL(videoUrl);
         if (parsed) {
             socket.emit("addVideo", {url: parsed});
         } else {
@@ -124,16 +123,18 @@ $(document).ready(function () {
     });
 
     socket.on("videoAdded", sync.playlist.addVideo);
+
     socket.on("disconnect", function () {
         sync.chat.append("<strong>The server is not available. Please refresh your browser</strong>");
         $("#msg").attr("disabled", "disabled");
         $("#addVideoBtn").attr("disabled", "disabled");
     });
+
 });
 
 function onPlayerStateChange(event) {
     if (event.data == YT.PlayerState.PLAYING) {
-        var time = sync.video.player.getCurrentTime();
+        var time = sync.youtube.player.getCurrentTime();
         if (time !== 0) {
             socket.emit("seek", time);
         }

@@ -1,42 +1,40 @@
 /**
  * Created by James on 16/06/2015.
  */
-
 var sync = sync || {};
 
-sync.playlist = (function () {
+sync.playlist = (function() {
     var self = {};
     self.videos = [];
-    self.pos;
+    self.pos = 0;
     self.totalDuration = 0;
     self.createPlaylist = function () {
         $('#videos').empty();
-        console.log(self.videos);
         $.each(self.videos, function (k) {
             self.append(self.videos[k]);
             self.totalDuration += self.videos[k].duration;
         });
-        $("#videos li:eq(" + self.pos + ")").addClass('active');
-        console.log("adding class active to pos ");
+        console.log(self.pos + " created playlist");
+        $("#videos>li").eq(self.pos).addClass('active');
+        sync.util.updatePlaylistInfo();
+    };
+    self.addVideo = function(video) {
+        self.videos.push(video);
+        self.totalDuration += video.duration;
+        self.append(self.videos[self.videos.length-1]);
+        sync.chat.append("<strong>" + video.via + "</strong> added: <em>" + video.title + "</em>", 'color:green');
+        if (sync.youtube.player === undefined) {
+            sync.youtube.load(video.url, 0);
+            $('.active').removeClass('active');
+            $("#videos>li").eq(self.pos).addClass('active');
+        }
         sync.util.updatePlaylistInfo();
     };
     self.loadVideo = function(pos) {
+        self.pos = pos;
         $('.active').removeClass('active');
-        $("#videos li:eq(" + pos + ")").addClass('active');
-        sync.video.loadVideoById(self.videos[pos].url, 0);
-    };
-    self.addVideo = function(data) {
-        if (sync.video.player === undefined) sync.video.load(data.url, 0);
-        self.videos.push({
-            "url": data.url,
-            "title": data.title,
-            "duration": data.duration,
-            "via": data.via
-        });
-        self.totalDuration += data.duration;
-        self.append(self.videos[self.videos.length-1]);
-        $("#chatbox").append("<li><div style='color:green'><strong>" + data.via + "</strong> added: <em>" + data.title + "</em></div></li>");
-        sync.util.updatePlaylistInfo();
+        $("#videos>li").eq(pos).addClass('active');
+        sync.youtube.loadVideoById(self.videos[pos].url, 0);
     };
     self.append = function(video) {
         $('#videos').append(
@@ -57,22 +55,26 @@ sync.util = {
         $(".duration").html(this.parseSeconds(sync.playlist.totalDuration));
         $(".numVideos").html(sync.playlist.videos.length + " video(s)");
     },
-    parseSeconds: function(seconds) {
-        var hours = parseInt(seconds / 3600) % 24 || 0;
-        var minutes = parseInt(seconds / 60) % 60 || 0;
-        var seconds = seconds % 60 || 0;
+    parseSeconds: function(secs) {
+        var hours = parseInt(secs / 3600) % 24 || 0;
+        var minutes = parseInt(secs / 60) % 60 || 0;
+        var seconds = secs % 60 || 0;
         if (seconds < 10) seconds = "0"+seconds;
         if (minutes < 10) minutes = "0"+minutes;
         var result = minutes + ":" + seconds;
         if (hours != 0) result = hours + ":" + result;
         return result;
+    },
+    parseURL : function(url) {
+        var videoid = url.match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/);
+        if (videoid != null) return videoid[1];
     }
 };
 
-
-sync.video = (function() {
+sync.youtube = (function() {
     var self = {};
     self.player;
+    self.loaded = false;
     self.load = function(videoId) {
         self.player = new YT.Player('player', {
             height: '390',
@@ -86,6 +88,7 @@ sync.video = (function() {
                 'onStateChange': onPlayerStateChange
             }
         });
+        self.loaded = true;
     };
     self.loadVideoById = function (id, seconds) {
         self.player.loadVideoById(id, seconds);
@@ -128,23 +131,16 @@ sync.users = (function () {
 
 sync.chat = (function () {
     var self = {};
-    //todo: chat log array
+    var chatmessages = [];//todo: chat log array
     self.append = function(msg, style) {
         if (typeof style != 'undefined')
-          $("#chatbox").append("<li style=' + style + '>" + msg + "</li>");
+            //$("#chatbox li").length
+          $("#chatbox").append("<li style='" + style + "'>" + msg + "</li>");
         else
           $("#chatbox").append("<li>" + msg + "</li>");
     };
     return self;
 }());
-
-var playerReady = false;
-function onYouTubeIframeAPIReady() {
-    if (sync.playlist.videos[sync.playlist.pos] !== undefined) {
-        sync.video.load(sync.playlist.videos[sync.playlist.pos].url);
-    }
-    playerReady = true;
-}
 
 (function () {
     var randomNameArr = ['ka', 'tu', 'mi', 'te', 'ku', 'lu', 'ji', 'ri',
@@ -157,17 +153,17 @@ function onYouTubeIframeAPIReady() {
     socket.emit("join", name, roomName);
     socket.on("ackJoin", function (data) {
         sync.users.uid = data.uid;
-        sync.chat.append( "<div><strong>Joined room " + roomName + ".</strong>" +
+        sync.chat.append( "<strong>Joined room " + roomName + ".</strong>" +
                           "<br>Your name is '" + data.username + "'. <br>" +
-                          "Type /setname to set your username.</div>" );
+                          "Type /setname to set your username." );
         if (data.playlist !== undefined) {
             sync.playlist.videos = data.playlist;
             sync.playlist.pos = data.pos;
             if (sync.playlist.videos[sync.playlist.pos] !== undefined) { //in case a person joins a room with no videos
                 sync.playlist.createPlaylist();
                 //if YT hasn't loaded when it was ready, and there's a video
-                if (playerReady && sync.video.player === undefined) {
-                    sync.video.load(sync.playlist.videos[sync.playlist.pos].url);
+                if (sync.youtube.loaded) {
+                    sync.youtube.load(sync.playlist.videos[sync.playlist.pos].url);
                 }
             }
         }

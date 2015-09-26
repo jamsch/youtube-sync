@@ -32,7 +32,6 @@
   padding-left: 12px;
 }
 
-
 .active  {
   background-color: #4a4a4a;
   color:#d6d6d6;
@@ -54,17 +53,17 @@
 #chatbox {
   height:444px;
   overflow:auto;
+  padding: 0;
+  margin:0;
 }
 
 #chatbox li, #users ul li {
   list-style-type: none;
+  padding-left: 5px;
 }
 #chatbox li:hover, #users ul li:hover, #videos li:hover:not(.active) {
   background-color: rgba(31, 62, 62, 0.05);
   cursor: pointer;
-}
-#chatbox >li>div, #users>ul>li>div {
-  margin-left: 10px;
 }
 
 /**
@@ -84,7 +83,6 @@
   height: 85%;
   overflow-y: scroll;
 }
-
 
 #videos li {
   counter-increment: step-counter;
