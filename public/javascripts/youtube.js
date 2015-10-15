@@ -9,9 +9,12 @@
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 }());
 
+
 function onYouTubeIframeAPIReady() {
-    // Load YT element only if there's a video
-    if (sync.playlist.videos.length > 0) {
-        sync.youtube.load(sync.playlist.videos[sync.playlist.pos].url);
-    }
+	setLoadedAttib = setInterval(function() {
+		if (typeof sync != "undefined") {
+			sync.youtube.loaded = true;
+			clearInterval(setLoadedAttib);
+		}
+	}, 500);
 }

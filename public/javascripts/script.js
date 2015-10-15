@@ -14,7 +14,6 @@ sync.playlist = (function() {
             self.append(self.videos[k]);
             self.totalDuration += self.videos[k].duration;
         });
-        console.log(self.pos + " created playlist");
         $("#videos>li").eq(self.pos).addClass('active');
         sync.util.updatePlaylistInfo();
     };
@@ -88,7 +87,6 @@ sync.youtube = (function() {
                 'onStateChange': onPlayerStateChange
             }
         });
-        self.loaded = true;
     };
     self.loadVideoById = function (id, seconds) {
         self.player.loadVideoById(id, seconds);
@@ -159,12 +157,14 @@ sync.chat = (function () {
         if (data.playlist !== undefined) {
             sync.playlist.videos = data.playlist;
             sync.playlist.pos = data.pos;
-            if (sync.playlist.videos[sync.playlist.pos] !== undefined) { //in case a person joins a room with no videos
+            if (typeof sync.playlist.videos[sync.playlist.pos] != 'undefined') { //in case a person joins a room with no videos
                 sync.playlist.createPlaylist();
-                //if YT hasn't loaded when it was ready, and there's a video
-                if (sync.youtube.loaded) {
-                    sync.youtube.load(sync.playlist.videos[sync.playlist.pos].url);
-                }
+				waitForVideo = setInterval(function() {
+					if (sync.youtube.loaded) {
+						sync.youtube.load(sync.playlist.videos[sync.playlist.pos].url);
+						clearInterval(waitForVideo);
+					}
+				}, 500);
             }
         }
     });
