@@ -13,10 +13,6 @@
   width:640px;
 }
 
-#content {
-  max-height: 300px;
-}
-
 #users {
   width:160px;
 }
@@ -69,6 +65,16 @@
 /**
   Playlist
 **/
+
+#ctrls {
+    width:458px;
+    margin: 0 auto;
+}
+
+#content {
+    resize: vertical;
+    height: 300px;
+}
 
 #content ol {
   background-color:#f0f0f0;

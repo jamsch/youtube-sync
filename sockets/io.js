@@ -8,28 +8,81 @@ var rooms = []; // Array of Room objects
     var socketio = socketio || {};
 
     socketio.init = (function (io) {
+
+        //Finds
+        setInterval(function(){
+            for (var room in rooms) {
+                if (typeof io.sockets.connected[rooms[room].owner] == 'undefined') {
+                    var socketid = io.findNewOwner(rooms[room].owner,room);
+                    if (typeof socketid != 'undefined') {
+                        rooms[room].removePerson(rooms[room].owner);
+                        rooms[room].owner = socketid;
+                        io.sockets.in(room).emit("updateUsers", {
+                            users: rooms[room].people,
+                            owner: rooms[room].owner
+                        });
+                    }
+                }
+                if (typeof rooms[room] == 'undefined') {
+                    io.sockets.in(room).disconnect();
+                    continue;
+                }
+                if (rooms[room].size <= 0) {
+                    io.sockets.in(room).disconnect();
+                    delete rooms[room];
+                    continue;
+                }
+                for (var person in rooms[room].people) {
+                    if (typeof io.sockets.connected[person] == 'undefined') {
+                        console.log("Removing: " + rooms[room].people[person].name);
+                        rooms[room].removePerson(person);
+                        var socketid = io.findNewOwner(person,room);
+                        if (typeof socketid != 'undefined') {
+                            rooms[room].removePerson(rooms[room].owner);
+                            rooms[room].owner = socketid;
+                            io.sockets.in(room).emit("updateUsers", {
+                                users: rooms[room].people,
+                                owner: rooms[room].owner
+                            });
+                        }
+                        io.sockets.in(room).emit("updateUsers", {
+                            users: rooms[room].people,
+                            owner: rooms[room].owner
+                        });
+                    }
+                }
+            }
+        }, 10000);
+
+        io.findNewOwner = function(socket_id,room_name) {
+            for (var id in rooms[room_name].people) {
+                if (socket_id !== id) {
+                    if (typeof io.sockets.connected[id] != 'undefined') {
+                        if (io.sockets.connected[id].connected) {
+                            socketid = id;
+                            break;
+                        }
+                    }
+                }
+            }
+        };
+
         io.on("connection", function (socket) {
             socket.on("join", function(username, room_name) {
 
-                // Prevent XSS/undefined check
-                if (typeof username != 'string' || typeof room_name != 'string') {
-                    socket.disconnect();
-                    return;
-                }
+                if (!validateUser(username,room_name)) socket.disconnect();
 
-                if (username.length > 12 || room_name.length > 12) {
-                    socket.disconnect();
-                    return;
-                }
+                // Set some socket properties the desired username
+
+                socket.username = username; //Todo: Check if valid username
+                socket.room = room_name; //Todo check if valid room name
+
                 // if Room is new/empty
                 if (rooms[room_name] === undefined) {
                     rooms[room_name] = new Room(socket.id);
                     console.log("Created a new room: " + room_name);
                 }
 
-                // Set some socket properties the desired username
-                socket.username = username; //Todo: Check if valid username
-                socket.room = room_name; //Todo check if valid room name
                 socket.join(room_name);
 
                 rooms[room_name].addPerson(socket.id, username);
@@ -119,6 +172,7 @@ var rooms = []; // Array of Room objects
                     method: 'GET',
                     port: 443
                 };
+
                 util.getJSON(options, function (statusCode, arr) {
                     if (arr.items.length < 1) {
                         io.sockets.connected[socket.id].emit("error", "Invalid video ID");
@@ -139,35 +193,43 @@ var rooms = []; // Array of Room objects
             });
 
             socket.on("chat", function (msg) {
+                if (typeof msg != 'string') {
+                    socket.disconnect();
+                    return;
+                }
+                if (msg.length > 200) {
+                    io.sockets.connected[socket.id].emit("err", "Message too long");
+                    return;
+                }
                 console.log(socket.username + " from " + socket.room + " sent " + msg);
                 io.sockets.in(socket.room).emit("chat", socket.username, msg);
             });
 
             socket.on("disconnect", function () {
-                if (rooms[socket.room] === undefined) return; //in case the user is no longer in a room (server restart)
+                if (rooms[socket.room] === undefined) return; //in case the user is no longer in a room
                 //delete room if last person leaves
                 if (rooms[socket.room].size === 1) {
-                    delete rooms[socket.room];
-                    console.log("Room " + socket.room + " deleted");
+                    deleteRoom(socket.room);
                 } else {
                     rooms[socket.room].size--;
                     // If the owner leaves
                     if (rooms[socket.room].owner === socket.id) {
                         try {
                             // Assign someone else the leader
-                            for (var id in rooms[socket.room].people) {
-                                if (socket.id !== id) break;
+                            var socketid = io.findNewOwner(socket.id,socket.room);
+                            if (typeof socketid != 'undefined') {
+                                socket.broadcast.to(socket.room).emit("newLeader", io.sockets.connected[id].username);
+                                rooms[socket.room].owner = id;
+                            } else {
+                                deleteRoom(socket.room);
                             }
-                            socket.broadcast.to(socket.room).emit("newLeader", io.sockets.connected[id].username);
-                            rooms[socket.room].owner = id;
                         } catch (err) {
                             console.log(err);
                         }
                     }
                     // If the person that's disconnecting exists in this room
-                    if (rooms[socket.room].people[socket.id]) {
+                    if (rooms[socket.room].removePerson(socket.id)) {
                         console.log("Removed person from " + socket.room + " - " + socket.username);
-                        delete rooms[socket.room].people[socket.id];
                         // Broadcast to the room that the person disconnected
                         socket.broadcast.to(socket.room).emit("userLeft", socket.username);
                     }
@@ -204,6 +266,7 @@ var rooms = []; // Array of Room objects
                     }
                 }
             });
+
             socket.on("resync", function () {
                 try {
                     io.sockets.connected[socket.id].emit("seek", {
@@ -214,11 +277,32 @@ var rooms = []; // Array of Room objects
                     console.log(err);
                 }
             });
+
             socket.on("shuffle", function () {
                 //todo owner shuffle video array
             });
         });
     });
+
+    //Private functions
+
+    var validateUser = (function(username,room_name) {
+        // Prevent XSS/undefined check
+        if (typeof username != 'string' || typeof room_name != 'string') {
+            return false;
+        }
+        if (username.length > 12 || room_name.length > 12) {
+            return false;
+        }
+        return true;
+    });
+
+    var deleteRoom = (function(room_name) {
+        delete rooms[room_name];
+        console.log("Room " + room_name + " deleted");
+    });
+
+    //Public functions
 
     socketio.getRoom = (function(room_name) {
         if (rooms[room_name] === undefined) return;
@@ -229,6 +313,7 @@ var rooms = []; // Array of Room objects
             owner: rooms[room_name].owner
         }
     });
+
     socketio.getUsers = (function(room_name) {
         if (rooms[room_name] === undefined) return;
         return rooms[room_name].people;

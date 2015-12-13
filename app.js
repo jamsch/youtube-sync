@@ -4,7 +4,7 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var socket_io = require( "socket.io" );
+var socket_io = require("socket.io");
 
 var app = express();
 app.io = socket_io();

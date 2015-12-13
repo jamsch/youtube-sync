@@ -21,6 +21,16 @@ Room.prototype.addPerson = function(id,name) {
     this.size++;
 };
 
+Room.prototype.removePerson = function(id) {
+    if (this.people[id])
+    {
+        delete this.people[id];
+        return true;
+    }
+    return false;
+
+};
+
 //todo mod user
 Room.prototype.modUser = function(id) {
     if (this.people[id] !== undefined) {

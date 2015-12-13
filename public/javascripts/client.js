@@ -96,7 +96,7 @@ $(document).ready(function () {
        // delVideo(sync.playlist.videos[sync.playlist.pos].url);
     });
 
-    socket.on("error", function(msg) {
+    socket.on("err", function(msg) {
         sync.chat.append(msg, "color:red");
     });
 
