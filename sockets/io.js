@@ -70,7 +70,10 @@ var rooms = []; // Array of Room objects
         io.on("connection", function (socket) {
             socket.on("join", function(username, room_name) {
 
-                if (!validateUser(username,room_name)) socket.disconnect();
+                if (!validateUser(username,room_name)) {
+                    socket.disconnect();
+                    return;
+                }
 
                 // Set some socket properties the desired username
 
@@ -291,7 +294,7 @@ var rooms = []; // Array of Room objects
         if (typeof username != 'string' || typeof room_name != 'string') {
             return false;
         }
-        if (username.length > 12 || room_name.length > 12) {
+        if (username.length > 12 || room_name.length > 24) {
             return false;
         }
         return true;
