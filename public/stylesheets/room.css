@@ -1,3 +1,9 @@
+#wrapper {
+    width:1200px;
+    margin: 0 auto;
+    min-width:700px;
+}
+
 #player, #chat, #users, #content {
   height:480px;
   background-color: rgba(0,0,0,0.1);

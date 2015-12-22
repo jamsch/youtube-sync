@@ -1,3 +1,10 @@
+#wrapper {
+    padding:0px 15px 15px;
+    width:50%;
+    min-width:700px;
+    background-color:#f0f0f0;
+    margin: auto;
+}
 
 .imgContainer {
     position: relative;
@@ -9,6 +16,7 @@
     color: #fff !important;
     font-size: 0.8em;
 }
+
 .tag {
     position: absolute;
     left: 0;
@@ -29,7 +37,6 @@
 
 #rooms {
     width:100%;
-    min-height: 200px;
 }
 
 #rooms li {

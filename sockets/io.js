@@ -10,11 +10,11 @@ var rooms = []; // Array of Room objects
     socketio.init = (function (io) {
 
         //Finds
-        setInterval(function(){
+        setInterval(function() {
             for (var room in rooms) {
                 if (typeof io.sockets.connected[rooms[room].owner] == 'undefined') {
                     var socketid = io.findNewOwner(rooms[room].owner,room);
-                    if (typeof socketid != 'undefined') {
+                    if (typeof socketid != 'undefined' && rooms[room] != 'undefined') {
                         rooms[room].removePerson(rooms[room].owner);
                         rooms[room].owner = socketid;
                         io.sockets.in(room).emit("updateUsers", {
