@@ -25,10 +25,10 @@ Room.prototype.removePerson = function(id) {
     if (this.people[id])
     {
         delete this.people[id];
+        this.size--;
         return true;
     }
     return false;
-
 };
 
 //todo mod user

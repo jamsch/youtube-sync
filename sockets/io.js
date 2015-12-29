@@ -59,8 +59,7 @@ var rooms = []; // Array of Room objects
                 if (socket_id !== id) {
                     if (typeof io.sockets.connected[id] != 'undefined') {
                         if (io.sockets.connected[id].connected) {
-                            socketid = id;
-                            break;
+                            return id;
                         }
                     }
                 }
@@ -142,13 +141,18 @@ var rooms = []; // Array of Room objects
                     });
                 }
             });
+
             socket.on("addVideo", function (data) {
-                //todo: check if video already exists in playlist
                 //todo: check if user can add videos to this room
                 //todo: check if user has reached personal video limit in room
 
                 if (rooms[socket.room].playlist.locked) {
-                    io.sockets.connected[socket.id].emit("error", "Playlist is locked");
+                    io.sockets.connected[socket.id].emit("err", "Playlist is locked");
+                    return;
+                }
+
+                if (rooms[socket.room].playlist.exists(data.url)) {
+                    io.sockets.connected[socket.id].emit("err", "Video already exists");
                     return;
                 }
 
@@ -178,19 +182,19 @@ var rooms = []; // Array of Room objects
 
                 util.getJSON(options, function (statusCode, arr) {
                     if (arr.items.length < 1) {
-                        io.sockets.connected[socket.id].emit("error", "Invalid video ID");
+                        io.sockets.connected[socket.id].emit("err", "Invalid video ID");
                         return;
                     }
-                    if (statusCode == 200) {
-                        data.name = arr.items[0].snippet.title;
-                        data.duration = util.parseDuration(arr.items[0].contentDetails.duration);
-                        data.username = socket.username;
-                        rooms[socket.room].addVideo(data);
-                        var videos = rooms[socket.room].playlist.videos;
-                        io.sockets.in(socket.room).emit("videoAdded", videos[videos.length - 1]);
-                    } else {
-                        console.log("Error with getting json data from YT API - " + statusCode);
+                    if (statusCode != 200) {
+                        io.sockets.connected[socket.id].emit("err", "Error contacting youtube. Please try again");
+                        return;
                     }
+                    data.name = arr.items[0].snippet.title;
+                    data.duration = util.parseDuration(arr.items[0].contentDetails.duration);
+                    data.username = socket.username;
+                    rooms[socket.room].addVideo(data);
+                    var videos = rooms[socket.room].playlist.videos;
+                    io.sockets.in(socket.room).emit("videoAdded", videos[videos.length - 1]);
                 });
 
             });
@@ -214,15 +218,14 @@ var rooms = []; // Array of Room objects
                 if (rooms[socket.room].size === 1) {
                     deleteRoom(socket.room);
                 } else {
-                    rooms[socket.room].size--;
                     // If the owner leaves
                     if (rooms[socket.room].owner === socket.id) {
                         try {
                             // Assign someone else the leader
                             var socketid = io.findNewOwner(socket.id,socket.room);
                             if (typeof socketid != 'undefined') {
-                                socket.broadcast.to(socket.room).emit("newLeader", io.sockets.connected[id].username);
-                                rooms[socket.room].owner = id;
+                                socket.broadcast.to(socket.room).emit("newLeader", io.sockets.connected[socketid].username);
+                                rooms[socket.room].owner = socketid;
                             } else {
                                 deleteRoom(socket.room);
                             }
@@ -231,6 +234,7 @@ var rooms = []; // Array of Room objects
                         }
                     }
                     // If the person that's disconnecting exists in this room
+
                     if (rooms[socket.room].removePerson(socket.id)) {
                         console.log("Removed person from " + socket.room + " - " + socket.username);
                         // Broadcast to the room that the person disconnected

@@ -17,13 +17,14 @@ playlist.prototype.addVideo = function(videoID) {
 
 playlist.prototype.removeVideo = function(videoID) {
     var videoIndex = -1;
-    for(var i = 0; i < this.videos.length; i++){
-        if(this.videos[i].id === videoID){
+    for (var i = 0; i < this.videos.length; i++) {
+        if(this.videos[i].url === videoID){
+            delete this.videos[i];
             videoIndex = i;
             break;
         }
     }
-    this.people.remove(videoIndex);
+   return videoIndex;
 };
 
 playlist.prototype.next = function() {
@@ -36,6 +37,13 @@ playlist.prototype.next = function() {
     this.timestamp = new Date().getTime();
     this.seekTime = 0;
 };
+
+playlist.prototype.exists = function(videoID) {
+    for (var i = 0; i < this.videos.length; i++) {
+        if (this.videos[i].url == videoID) return true;
+    }
+    return false;
+}
 
 //todo move video function
 module.exports = playlist;
