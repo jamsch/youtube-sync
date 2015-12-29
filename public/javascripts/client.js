@@ -91,7 +91,7 @@ $(document).ready(function () {
             sync.chat.append("Invalid video ID", "color:red");
         }
     });
-    $("#clearPlayed").click(function() {
+    $("#clear").click(function() {
         socket.emit("clearPlayed");
        // delVideo(sync.playlist.videos[sync.playlist.pos].url);
     });

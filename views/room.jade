@@ -1,8 +1,8 @@
 extends layout
 block content
-    header
-        h1 Welcome to #{room}
     #wrapper
+        header
+            h1 Welcome to #{room}
         #player
         #chat
             ul#chatbox
@@ -16,7 +16,7 @@ block content
                 button(type='button')#addVideoBtn Add video
                 button(type='button')#next Next
                 button(type='button')#resync Resync
-                button(type='button')#clearPlayed Clear
+                button(type='button')#clear Clear
                 button(type='button')#shuffle Shuffle
             #roomPlaylist
                 ol#videos
