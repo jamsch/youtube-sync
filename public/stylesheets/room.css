@@ -12,7 +12,7 @@ button {
 }
 
 #wrapper {
-    width:1200px;
+    width:1100px;
     margin: 0 auto;
     min-width:700px;
 }
@@ -32,17 +32,40 @@ button {
   width:640px;
 }
 
+#rightcolumn {
+    min-width:460px;
+    min-height: 480px;
+    float: right;
+}
+
+#drag {
+    clear:both;
+    cursor:s-resize;
+    min-width:460px;
+    transition: min-height 0.2s;
+    min-height: 4px;
+    background-color:rgba(64, 119, 128, 0.35);
+}
+
+#drag:hover {
+    background-color: rgba(87, 226, 249, 0.71);
+    min-height: 8px;
+}
+
 #users {
-  width:160px;
+    min-width: 160px;
+    max-width: 160px;
+    min-height: 100%;
 }
 
 #chat {
+  height:100%;
   width:300px;
 }
 
 #chat ul {
     background-color:#f0f0f0;
-    resize:vertical;
+    min-height: 444px;
 }
 
 #msg {
@@ -65,7 +88,7 @@ button {
 **/
 
 #chatbox {
-  height:444px;
+  height: calc(100% - 36px);
   overflow:auto;
   word-wrap:break-word;
   padding: 0;

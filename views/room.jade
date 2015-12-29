@@ -4,12 +4,14 @@ block content
         header
             h1 Welcome to #{room}
         #player
-        #chat
-            ul#chatbox
-            form#chatForm
-                input#msg(type='text',autocomplete="off")
-        #users
-            ul
+        #rightcolumn
+            #chat
+                ul#chatbox
+                form#chatForm
+                    input#msg(type='text',autocomplete="off")
+            #users
+                ul
+            #drag
         #content
             #ctrls
                 input#videoUrl(type='text', placeholder='video url')
