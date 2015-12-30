@@ -101,7 +101,7 @@ $(document).ready(function () {
     });
 
     socket.on("chat", function (person, msg) {
-        sync.chat.append("<div><strong>" + person + "</strong>: " + msg + "</div>");
+        sync.chat.append("<div><strong>" + person + "</strong>: " + checkEmotes(msg) + "</div>");
         $('#chatbox').scrollTop($('#chatbox')[0].scrollHeight);
     });
 
