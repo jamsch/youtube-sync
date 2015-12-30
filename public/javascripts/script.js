@@ -134,7 +134,9 @@ sync.chat = (function () {
         if (typeof style != 'undefined')
           $("#chatbox").append("<li style='" + style + "'>" + msg + "</li>");
         else
-          $("#chatbox").append("<li>" + msg + "</li>");
+          $("#chatbox").append($("<li>" + msg + "</li>").linkify({
+              target: "_blank"
+          }));
         $('#chatbox').scrollTop($('#chatbox')[0].scrollHeight);//$("#chatbox li").length
     };
     return self;

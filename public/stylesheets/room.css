@@ -142,7 +142,7 @@ button:active {
 }
 
 #content {
-    background-color:#333333;
+    background-color: #2b2b2b;
     resize: vertical;
     height: 300px;
 }
