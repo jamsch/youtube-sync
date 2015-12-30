@@ -2,7 +2,7 @@ body {
     background: #222 !important;
 }
 
-header h1  {
+header h1, #info  {
     color: #fff;
 }
 
@@ -15,6 +15,15 @@ button {
     width:1100px;
     margin: 0 auto;
     min-width:700px;
+}
+
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color:#999;
+    border-radius:5px;
 }
 
 #player, #chat, #users, #content {
@@ -34,7 +43,9 @@ button {
 
 #rightcolumn {
     min-width:460px;
-    min-height: 480px;
+    height:480px;
+    min-height:480px;
+    max-height:780px;
     float: right;
 }
 
@@ -54,7 +65,6 @@ button {
 
 #users {
     min-width: 160px;
-    max-width: 160px;
     min-height: 100%;
 }
 
@@ -65,7 +75,6 @@ button {
 
 #chat ul {
     background-color:#f0f0f0;
-    min-height: 444px;
 }
 
 #msg {
@@ -134,8 +143,8 @@ button {
 
 #roomPlaylist {
   height: 85%;
-  overflow-y: scroll;
-  background-color:#555555;
+  overflow-y: auto;
+  background-color:#555;
 }
 
 #videos li {

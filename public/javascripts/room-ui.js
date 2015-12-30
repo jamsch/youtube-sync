@@ -6,13 +6,12 @@ $(document).ready(function(){
     $('#drag').on('mousedown', function(e){
         var $dragable = $(this).parent(),
             startHeight = $dragable.height(),
-            pX = e.pageY;
-        console.log('dragging');
+            pY = e.pageY;
         $(document).on('mouseup', function(e){
             $(document).off('mouseup').off('mousemove');
         });
         $(document).on('mousemove', function(me){
-            var my = (me.pageY - pX);
+            var my = (me.pageY - pY);
             $dragable.css({
                 height: startHeight + my,
             });
