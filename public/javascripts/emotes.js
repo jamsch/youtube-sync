@@ -137,7 +137,7 @@ var checkEmotes = function(msg) {
 	for (word in words) {
 		if (words[word] in emotes) {
             if (emoteLimit > emoteCount) {
-                words[word] = "<img src='" + emotes[words[word]] + "' width='50' height='50'>";
+                words[word] = "<img src='" + emotes[words[word]] + "' height='50'>";
                 emoteCount++;
             };
 		}
