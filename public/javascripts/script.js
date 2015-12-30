@@ -132,11 +132,10 @@ sync.chat = (function () {
     var chatmessages = [];//todo: chat log array
     self.append = function(msg, style) {
         if (typeof style != 'undefined')
-            //$("#chatbox li").length
           $("#chatbox").append("<li style='" + style + "'>" + msg + "</li>");
         else
           $("#chatbox").append("<li>" + msg + "</li>");
-        $('#chatbox').scrollTop($('#chatbox')[0].scrollHeight);
+        $('#chatbox').scrollTop($('#chatbox')[0].scrollHeight);//$("#chatbox li").length
     };
     return self;
 }());

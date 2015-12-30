@@ -3,6 +3,7 @@
  */
 var Room = require('../room');
 var util = require('./util');
+var sanitize = require('validator').escape;
 var rooms = []; // Array of Room objects
 
     var socketio = socketio || {};
@@ -204,12 +205,13 @@ var rooms = []; // Array of Room objects
                     socket.disconnect();
                     return;
                 }
+
                 if (msg.length > 200) {
                     io.sockets.connected[socket.id].emit("err", "Message too long");
                     return;
                 }
                 console.log(socket.username + " from " + socket.room + " sent " + msg);
-                io.sockets.in(socket.room).emit("chat", socket.username, msg);
+                io.sockets.in(socket.room).emit("chat", socket.username, sanitize(msg));
             });
 
             socket.on("disconnect", function () {
