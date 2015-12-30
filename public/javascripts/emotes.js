@@ -106,9 +106,9 @@ var emotes = {
     ":jii:" : "https://i.imgur.com/zG59d7Q.png",
     ":spherical:" : "https://i.imgur.com/ejyx6KU.png",
     ":â–²:" : "https://i.imgur.com/tcNC8l3.gif", /*make sure file is encoded in UTF-8*/
-    ":nope:" : "<img src=https://i.imgur.com/UMkAem5.gif",
+    ":nope:" : "https://i.imgur.com/UMkAem5.gif",
     ":whatastory:" : "https://i.imgur.com/bysf1J5.png",
-    ":doot:" : "<img src=https://i.imgur.com/WfUlQ5Q.gif",
+    ":doot:" : "https://i.imgur.com/WfUlQ5Q.gif",
     ":heero:" : "https://i.imgur.com/D7JCR6j.png",
     ":facepalm:" : "https://i.imgur.com/fUU5XZu.png",
     ":remove:": "https://i.imgur.com/m1jhaWU.gif",
