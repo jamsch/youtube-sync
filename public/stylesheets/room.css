@@ -132,8 +132,7 @@ button:active {
 **/
 
 #ctrls {
-    width:458px;
-    margin: 0 auto;
+    text-align:center;
     padding:5px;
 }
 
@@ -148,7 +147,6 @@ button:active {
 }
 
 #content ol {
-  background-color:#f0f0f0;
   margin: 5px auto;
   border-radius: 4px;
   border: 1px solid #DDD;
